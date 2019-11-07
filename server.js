@@ -142,7 +142,7 @@ app.get('/home/pick_color', function(req, res) {
 				color_msg: info[1][0].color_msg
 			})
     })
-    .catch(error => {
+    .catch(function (err) {
         // display error message in case an error
             request.flash('error', err);
             response.render('pages/home', {
@@ -155,9 +155,110 @@ app.get('/home/pick_color', function(req, res) {
 
 });
 
+app.get('/team_stats', function(req, res) {
+	var game_info = 'select * from football_games;';
+	var wins = 'select count(*) from football_games where (home_score > visitor_score);';
+	var losses = 'select count(*) from football_games where (visitor_score > home_score);';
+	db.task('get-everything', task => {
+		return task.batch([
+			task.query(game_info),
+			task.query(wins),
+			task.query(losses)
+		]);
+	})
+	.then(info => {
+		res.render('pages/team_stats',{
+			my_title: "Team Stats for 2018",
+			result_1: info[0],
+			result_2: info[1],
+			result_3: info[2]
+		})
+	})
+	.catch(error => {
+		
+		res.render('pages/team_stats',{
+			my_title: "Team Stats for 2018",
+			result_1: '',
+			result_2: '',
+			result_3: ''
+		})
+	});
+	/*db.any(losses)
+    .then(function (rows) {
+        res.render('pages/team_stats',{
+			my_title: "My Title Here",
+			result_3: rows,
+		})
 
+    })
+    .catch(function (err) {
+        // display error message in case an error
+        request.flash('error', err);
+        res.render('pages/team_stats',{
+			my_title: "My Title Here",
+			result_2: '',
+		})
+	});*/
 
+	/*db.any(wins)
+    .then(function (rows) {
+        res.render('pages/team_stats',{
+			result_2: rows
+		})
 
+    })
+    .catch(function (err) {
+        // display error message in case an error
+        request.flash('error', err);
+        res.render('pages/team_stats',{
+
+			result_2: ''
+		})
+	});
+
+	db.any(losses)
+    .then(function (rows) {
+        res.render('pages/team_stats',{
+			
+			result_3: rows,
+		})
+
+    })
+    .catch(function (err) {
+        // display error message in case an error
+        request.flash('error', err);
+        res.render('pages/team_stats',{
+			result_3: '',
+		})
+	});*/
+});
+
+app.get('/player_info', function(req, res) {
+	var query = 'select id, name from football_players;';
+	db.query(query)
+		.then(info => {
+			res.render('pages/player_info',{
+				my_title: "2018 Player Info",
+				drop_info: info
+			})
+		})
+		.catch(error => {
+			res.render('pages/player_info',{
+				my_title: '2018 Player Info'
+			})
+		});
+});
+
+app.get('player_info/select_player', function(req, res) {
+	var player_id = req.query.player_choice;
+	var query = "select * from football_players where id = " + player_id + ";";
+	db.query(query)
+		.then(data => {
+			res.render('pages/player_info',{
+				table_data: data
+			})
+		});
+});
 
 /*********************************
  
